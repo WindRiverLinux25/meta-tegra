@@ -6,6 +6,7 @@ PV = "36.4.3+git"
 
 SRC_URI += "file://0001-t23x-overlay-add-dts-to-support-Arducam-6-channels-o.patch \
             file://0001-drivers-video-nvcsi-t194-fix-the-failure-of-creating.patch \
+            file://0001-t23x-overlay-create-a-overlay-dts-to-support-for-boo.patch \
 "
 
 S = "${WORKDIR}/git"
