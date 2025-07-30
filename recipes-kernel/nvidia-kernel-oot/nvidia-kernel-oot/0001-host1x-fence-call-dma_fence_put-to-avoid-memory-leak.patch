@@ -1,0 +1,44 @@
+From 83fb739298838e683a3837787280aebffab31148 Mon Sep 17 00:00:00 2001
+From: Meng Li <Meng.Li@windriver.com>
+Date: Wed, 30 Jul 2025 17:24:17 +0800
+Subject: [PATCH] host1x-fence: call dma_fence_put() to avoid memory leak
+
+When running camera preview test, there is below memory leak reported
+  backtrace (crc d553f09):
+    kmemleak_alloc+0x3c/0x50
+    __kmalloc_cache_noprof+0x244/0x3f8
+    host1x_fence_create+0x3c/0xe0 [host1x]
+    dev_file_ioctl+0xe8/0x9d8 [host1x_fence]
+    __arm64_sys_ioctl+0xb4/0x100
+    invoke_syscall+0x5c/0x128
+    el0_svc_common.constprop.0+0xc8/0xf8
+    do_el0_svc+0x24/0x40
+    el0_svc+0x30/0xf8
+    el0t_64_sync_handler+0x120/0x138
+    el0t_64_sync+0x190/0x198
+This issue is caused by forgetting release dma fence, so call
+dma_fence_put() to avoid memory leak.
+
+Upstream-Status: Pending
+
+Signed-off-by: Meng Li <Meng.Li@windriver.com>
+---
+ drivers/gpu/host1x-fence/dev.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/nvidia-oot/drivers/gpu/host1x-fence/dev.c b/nvidia-oot/drivers/gpu/host1x-fence/dev.c
+index fa95e28..2229978 100644
+--- a/nvidia-oot/drivers/gpu/host1x-fence/dev.c
++++ b/nvidia-oot/drivers/gpu/host1x-fence/dev.c
+@@ -172,6 +172,8 @@ static int dev_file_ioctl_fence_extract(struct host1x *host1x, void __user *data
+ 		goto put_fence;
+ 	}
+ 
++	dma_fence_put(fence);
++
+ 	return 0;
+ 
+ put_fence:
+-- 
+2.34.1
+
