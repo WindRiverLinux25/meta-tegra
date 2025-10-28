@@ -15,6 +15,7 @@ SRC_URI += "file://0001-t23x-overlay-add-dts-to-support-Arducam-6-channels-o.pat
             file://0001-t23x-overlay-create-dts-for-booting-NVIDIA-Orin-Nano.patch \
             file://0001-usb-typec-remove-IRQF_ONESHOT-flag.patch \
             file://0001-host1x-fence-call-fput-to-avoid-memory-leak.patch \
+            file://0001-drivers-capture-common-only-create-memory-cache-at-t.patch \
 "
 
 S = "${WORKDIR}/git"
