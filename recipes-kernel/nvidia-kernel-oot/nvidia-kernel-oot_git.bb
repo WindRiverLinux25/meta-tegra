@@ -17,6 +17,7 @@ SRC_URI += "file://0001-t23x-overlay-add-dts-to-support-Arducam-6-channels-o.pat
             file://0001-host1x-fence-call-fput-to-avoid-memory-leak.patch \
             file://0001-drivers-capture-common-only-create-memory-cache-at-t.patch \
             file://0001-usb-typec-release-resource-when-removing-usb-driver-.patch \
+            file://0001-nvdisplay-nv-platform-call-platform_device_put-to-de.patch \
 "
 
 S = "${WORKDIR}/git"
