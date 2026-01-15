@@ -1,6 +1,12 @@
 require optee-l4t.inc
 TEGRA_SRC_SUBARCHIVE_OPTS = "--strip-components=1 optee/optee_os"
 
+FILESEXTRAPATHS:prepend := "${THISDIR}/optee-os:"
+
+SRC_URI:append = "\
+        file://CVE-2025-46733-nvidia-orin.patch \
+"
+
 LICENSE = "BSD-2-Clause & Proprietary"
 LIC_FILES_CHKSUM = " \
     file://LICENSE;md5=2f6a2cb48b5cc5cd0bd3f87a836cb407 \
