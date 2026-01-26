@@ -1,0 +1,106 @@
+From 5fa4ab21eca55b7c7c2b677cbdb2c2699c915b14 Mon Sep 17 00:00:00 2001
+From: Sarah Newman <sarah.newman@bluerivertech.com>
+Date: Wed, 2 Apr 2025 07:26:15 -0700
+Subject: [PATCH] fix(stmm): add error handling for var store integrity
+
+commit 5fa4ab21eca55b7c7c2b677cbdb2c2699c915b14 from
+https://github.com/NVIDIA/edk2-nvidia.git
+
+If the reserved partition used to store the var store integrity
+measurements isn't present then fail the Fvb Driver instead of
+proceeding with the boot.
+
+Add error handling for cases when memory allocation fails when setting
+up the FVB instances.
+
+Upstream-Status: Backport
+
+Signed-off-by: Girish Mahadevan <gmahadevan@nvidia.com>
+Reviewed-by: Ashish Singhal <ashishsingha@nvidia.com>
+Reviewed-by: Jeff Brasen <jbrasen@nvidia.com>
+Tested-by: Jake Garver <jake@nvidia.com>
+Reviewed-by: Jake Garver <jake@nvidia.com>
+Signed-off-by: Meng Li <Meng.Li@windriver.com>
+---
+ .../FvbNorFlashDxe/FvbNorFlashStandaloneMm.c    | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/Silicon/NVIDIA/Drivers/FvbNorFlashDxe/FvbNorFlashStandaloneMm.c b/Silicon/NVIDIA/Drivers/FvbNorFlashDxe/FvbNorFlashStandaloneMm.c
+index b8bc03d4..2ad48371 100644
+--- a/Silicon/NVIDIA/Drivers/FvbNorFlashDxe/FvbNorFlashStandaloneMm.c
++++ b/Silicon/NVIDIA/Drivers/FvbNorFlashDxe/FvbNorFlashStandaloneMm.c
+@@ -2,7 +2,7 @@
+ 
+   Standalone MM driver Fvb Driver
+ 
+-  SPDX-FileCopyrightText: Copyright (c) 2018 - 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
++  SPDX-FileCopyrightText: Copyright (c) 2018 - 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+   Copyright (c) 2011 - 2014, ARM Ltd. All rights reserved.<BR>
+ 
+   SPDX-License-Identifier: BSD-2-Clause-Patent
+@@ -1584,16 +1584,17 @@ FVBNORInitialize (
+     }
+   }
+ 
+-  CheckVarStoreIntegrity = FALSE;
++  CheckVarStoreIntegrity = FeaturePcdGet (PcdVarStoreIntegritySupported);
+ 
+-  /* If Variable Store Integrity is enabled, user the reserved partition
++  /* If Variable Store Integrity is enabled, use the reserved partition
++   * to store the measurements. If the reserved partition is not found or does
++   * not meet the alignment requirements, return an error.
+    */
+-  if (FeaturePcdGet (PcdVarStoreIntegritySupported) == TRUE) {
++  if (CheckVarStoreIntegrity == TRUE) {
+     if ((ReservedPartitionOffset != 0) && (ReservedPartitionSize != 0) &&
+         ((ReservedPartitionOffset % NorFlashAttributes.BlockSize) == 0) &&
+         ((ReservedPartitionSize % NorFlashAttributes.BlockSize) == 0))
+     {
+-      CheckVarStoreIntegrity = TRUE;
+       DEBUG ((
+         DEBUG_ERROR,
+         "%a:Using Reserved Partition %lu %lu for VarStore Integrity\n",
+@@ -1609,6 +1610,8 @@ FVBNORInitialize (
+         ReservedPartitionSize,
+         NorFlashAttributes.BlockSize
+         ));
++      Status = EFI_DEVICE_ERROR;
++      goto Exit;
+     }
+   }
+ 
+@@ -1617,6 +1620,7 @@ FVBNORInitialize (
+   FvpData = AllocateRuntimeZeroPool (sizeof (NVIDIA_FVB_PRIVATE_DATA) * FVB_TO_CREATE);
+   if (FvpData == NULL) {
+     DEBUG ((DEBUG_ERROR, "Failed to create FvpData\r\n"));
++    Status = EFI_OUT_OF_RESOURCES;
+     goto Exit;
+   }
+ 
+@@ -1624,6 +1628,7 @@ FVBNORInitialize (
+   VarStoreBuffer = AllocateRuntimePages (EFI_SIZE_TO_PAGES (VariableSize));
+   if (VarStoreBuffer == NULL) {
+     DEBUG ((DEBUG_ERROR, "Failed to create VarStoreBuffer\r\n"));
++    Status = EFI_OUT_OF_RESOURCES;
+     goto Exit;
+   }
+ 
+@@ -1648,6 +1653,7 @@ FVBNORInitialize (
+   FtwSpareBuffer = AllocateAlignedRuntimePages (EFI_SIZE_TO_PAGES (VariableSize), NorFlashAttributes.BlockSize);
+   if (FtwSpareBuffer == NULL) {
+     DEBUG ((DEBUG_ERROR, "Failed to create FtwSpareBuffer\r\n"));
++    Status = EFI_OUT_OF_RESOURCES;
+     goto Exit;
+   }
+ 
+@@ -1663,6 +1669,7 @@ FVBNORInitialize (
+   FtwWorkingBuffer = AllocateAlignedRuntimePages (EFI_SIZE_TO_PAGES (FtwSize - VariableSize), NorFlashAttributes.BlockSize);
+   if (FtwWorkingBuffer == NULL) {
+     DEBUG ((DEBUG_ERROR, "Failed to create FtwWorkingBuffer\r\n"));
++    Status = EFI_OUT_OF_RESOURCES;
+     goto Exit;
+   }
+ 
+-- 
+2.34.1
+

@@ -38,6 +38,7 @@ SRC_URI += "\
     file://0004-MdePkg-Check-if-compiler-has-__has_builtin-before-tr.patch \
     file://0005-BaseFdtLib-Define-bool-only-for-C17-or-lower.patch \
     file://0006-XsubcontrollerDxe-Fix-build-with-gcc-15.patch;patchdir=../edk2-nvidia \
+    file://0001-fix-stmm-add-error-handling-for-var-store-integrity.patch;patchdir=../edk2-nvidia \
 "
 
 S = "${WORKDIR}/edk2-tegra/edk2"
