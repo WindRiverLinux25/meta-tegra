@@ -24,6 +24,8 @@ SRC_URI += "file://0001-t23x-overlay-add-dts-to-support-Arducam-6-channels-o.pat
             file://0001-drivers-devfreq-avoid-deadlock-issue-when-calling-de.patch \
             file://0001-drivers-nvethernet-speed-10-is-not-supported-while-a.patch \
             file://0001-nvdisplay-replace-lock-sync-with-wait-event-mechanis.patch \
+            file://0001-nvgpu-dma-use-unlocked-variant-function-to-process-d.patch \
+            file://0001-nvdisplay-dma-use-unlocked-variant-function-when-map.patch \
 "
 
 S = "${WORKDIR}/git"
