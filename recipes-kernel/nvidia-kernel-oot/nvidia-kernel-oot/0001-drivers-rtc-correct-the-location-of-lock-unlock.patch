@@ -1,0 +1,60 @@
+From b7a52724569f35fed958a98a695337c3ccf56554 Mon Sep 17 00:00:00 2001
+From: Meng Li <Meng.Li@windriver.com>
+Date: Wed, 14 Jan 2026 15:17:46 +0800
+Subject: [PATCH] drivers: rtc: correct the location of lock/unlock
+
+When running below command, there is a warning trace reported
+WARNING: bad unlock balance detected!
+kworker/6:3/5070 is trying to release lock (&info->lock) at:
+[<ffffffd9848eb364>] nvvrs_rtc_update_alarm_reg+0xac/0x168 [nvvrs_pseq_rtc]
+but there are no more locks to release!
+Call trace:
+ ......
+ mutex_unlock+0x30/0x58
+ nvvrs_rtc_update_alarm_reg+0xac/0x168 [nvvrs_pseq_rtc]
+ nvvrs_rtc_disable_alarm+0xa8/0x140 [nvvrs_pseq_rtc]
+ nvvrs_rtc_alarm_irq_enable+0x48/0x60 [nvvrs_pseq_rtc]
+ rtc_alarm_disable+0x3c/0x68
+ ......
+ ret_from_fork+0x10/0x20
+This issue is caused by releasing a unlocked lock, so correct the
+location of lock/unlock to avoid warning trace.
+
+Upstream-Status: Pending
+
+Signed-off-by: Meng Li <Meng.Li@windriver.com>
+---
+ drivers/rtc/nvvrs-pseq-rtc.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/nvidia-oot/drivers/rtc/nvvrs-pseq-rtc.c b/nvidia-oot/drivers/rtc/nvvrs-pseq-rtc.c
+index 3908f67..0f2b9cb 100644
+--- a/nvidia-oot/drivers/rtc/nvvrs-pseq-rtc.c
++++ b/nvidia-oot/drivers/rtc/nvvrs-pseq-rtc.c
+@@ -144,7 +144,6 @@ static int nvvrs_rtc_update_alarm_reg(struct i2c_client *client,
+ 	}
+ 
+ out:
+-	mutex_unlock(&info->lock);
+ 	return ret;
+ }
+ 
+@@ -154,6 +153,7 @@ static int nvvrs_rtc_disable_alarm(struct nvvrs_rtc_info *info)
+ 	u8 val[REG_LEN_IN_BYTES];
+ 	int ret;
+ 
++	mutex_lock(&info->lock);
+ 	/* Clear RTC_WAKE bit */
+ 	ret = nvvrs_update_bits(info, info->drv_data->map[CTL2_REG],
+ 				NVVRS_PSEQ_REG_CTL_2_RTC_WAKE, 0);
+@@ -182,6 +182,7 @@ static int nvvrs_rtc_disable_alarm(struct nvvrs_rtc_info *info)
+ 		goto out;
+ 	}
+ out:
++	mutex_unlock(&info->lock);
+ 	return ret;
+ }
+ 
+-- 
+2.34.1
+
