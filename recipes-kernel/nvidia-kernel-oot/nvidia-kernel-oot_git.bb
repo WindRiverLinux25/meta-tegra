@@ -19,6 +19,7 @@ SRC_URI += "file://0001-t23x-overlay-add-dts-to-support-Arducam-6-channels-o.pat
             file://0001-usb-typec-release-resource-when-removing-usb-driver-.patch \
             file://0001-nvdisplay-nv-platform-call-platform_device_put-to-de.patch \
             file://0001-nvidia-modeset-dp-decrease-reference-if-destroy-func.patch \
+            file://0001-nvdisplay-nv-platform-set-the-dma-segment-size-for-n.patch \
 "
 
 S = "${WORKDIR}/git"
