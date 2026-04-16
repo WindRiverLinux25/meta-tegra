@@ -21,6 +21,7 @@ SRC_URI += "file://0001-t23x-overlay-add-dts-to-support-Arducam-6-channels-o.pat
             file://0001-nvidia-modeset-dp-decrease-reference-if-destroy-func.patch \
             file://0001-nvdisplay-nv-platform-set-the-dma-segment-size-for-n.patch \
             file://0001-drivers-devfreq-call-devfreq_get_freq_range-in-locke.patch \
+            file://0001-drivers-devfreq-avoid-deadlock-issue-when-calling-de.patch \
 "
 
 S = "${WORKDIR}/git"
