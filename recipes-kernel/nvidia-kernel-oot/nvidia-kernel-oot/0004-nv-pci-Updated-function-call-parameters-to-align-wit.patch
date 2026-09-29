@@ -1,0 +1,81 @@
+From cddfd9c59cbb427f87567dbc2ec9156108440021 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Juhandr=C3=A9=20Knoetze?= <juhandre.knoetze@windriver.com>
+Date: Mon, 28 Sep 2026 11:31:01 -0400
+Subject: [PATCH 4/4] nv-pci: Updated function call parameters to align with
+ 6.12.103
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Added conftest to check if the `pci_resize_resource()` parameter
+`int exclude_bars` is present.
+
+Upstream-Status: Pending
+Signed-off-by: Juhandré Knoetze <juhandre.knoetze@windriver.com>
+---
+ nvdisplay/kernel-open/conftest.sh          | 19 +++++++++++++++++++
+ nvdisplay/kernel-open/nvidia/nv-pci.c      |  4 ++++
+ nvdisplay/kernel-open/nvidia/nvidia.Kbuild |  1 +
+ 3 files changed, 24 insertions(+)
+
+diff --git a/nvdisplay/kernel-open/conftest.sh b/nvdisplay/kernel-open/conftest.sh
+index 44bf5be..74ec209 100644
+--- a/nvdisplay/kernel-open/conftest.sh
++++ b/nvdisplay/kernel-open/conftest.sh
+@@ -6160,6 +6160,25 @@ compile_test() {
+             compile_check_conftest "$CODE" "NV_PCI_REBAR_GET_POSSIBLE_SIZES_PRESENT" "" "functions"
+         ;;
+ 
++        pci_resize_resource)
++            # Determine if the id the pci_resize_resource() function has
++            # the "int exclude_bars" parameter.
++            #
++            # Added by commit 337b1b566db ("PCI: Fix restoring BARs on BAR
++            # resize rollback path") in v6.19 (committed 2025-11-13)
++            #
++            CODE="
++            #include <linux/pci.h>
++            int conftest_pci_resize_resource_has_exclude_bars_arg(void) {
++                struct pci_dev dev;
++
++                return pci_resize_resource(&dev, 0, 0, 0);
++            }
++            "
++
++            compile_check_conftest "$CODE" "NV_PCI_RESIZE_RESOURCE_HAS_EXCLUDE_BARS_ARG" "" "types"
++        ;;
++
+         wait_for_random_bytes)
+             #
+             # Determine if the wait_for_random_bytes() function is present.
+diff --git a/nvdisplay/kernel-open/nvidia/nv-pci.c b/nvdisplay/kernel-open/nvidia/nv-pci.c
+index ad2bfee..ff141c4 100644
+--- a/nvdisplay/kernel-open/nvidia/nv-pci.c
++++ b/nvdisplay/kernel-open/nvidia/nv-pci.c
+@@ -216,7 +216,11 @@ static int nv_resize_pcie_bars(struct pci_dev *pci_dev) {
+ 
+ resize:
+     /* Attempt to resize BAR1 to the largest supported size */
++#if defined(NV_PCI_RESIZE_RESOURCE_HAS_EXCLUDE_BARS_ARG) /* Linux 6.19 */
++    r = pci_resize_resource(pci_dev, NV_GPU_BAR1, requested_size, 0);
++#else
+     r = pci_resize_resource(pci_dev, NV_GPU_BAR1, requested_size);
++#endif
+ 
+     if (r) {
+         if (r == -ENOSPC)
+diff --git a/nvdisplay/kernel-open/nvidia/nvidia.Kbuild b/nvdisplay/kernel-open/nvidia/nvidia.Kbuild
+index c87daf3..8d72c1c 100644
+--- a/nvdisplay/kernel-open/nvidia/nvidia.Kbuild
++++ b/nvdisplay/kernel-open/nvidia/nvidia.Kbuild
+@@ -243,6 +243,7 @@ NV_CONFTEST_TYPE_COMPILE_TESTS += vmalloc_has_pgprot_t_arg
+ NV_CONFTEST_TYPE_COMPILE_TESTS += mm_has_mmap_lock
+ NV_CONFTEST_TYPE_COMPILE_TESTS += pci_channel_state
+ NV_CONFTEST_TYPE_COMPILE_TESTS += pci_dev_has_ats_enabled
++NV_CONFTEST_TYPE_COMPILE_TESTS += pci_resize_resource
+ NV_CONFTEST_TYPE_COMPILE_TESTS += remove_memory_has_nid_arg
+ NV_CONFTEST_TYPE_COMPILE_TESTS += add_memory_driver_managed_has_mhp_flags_arg
+ NV_CONFTEST_TYPE_COMPILE_TESTS += num_registered_fb
+-- 
+2.43.0
+

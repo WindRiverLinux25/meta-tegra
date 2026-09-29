@@ -27,6 +27,11 @@ SRC_URI += "file://0001-t23x-overlay-add-dts-to-support-Arducam-6-channels-o.pat
             file://0001-nvgpu-dma-use-unlocked-variant-function-to-process-d.patch \
             file://0001-nvdisplay-dma-use-unlocked-variant-function-when-map.patch \
             file://0001-drivers-rtc-correct-the-location-of-lock-unlock.patch \
+            file://0001-drm-tegra-Adding-conftest-for-drm_fb_helper_alloc_fb.patch \
+            file://0001-nv-memdbg-Expanded-macro-no-longer-leaves-if-with-em.patch \
+            file://0002-os-interface-made-local-function-static.patch \
+            file://0003-internal_crypt_lib-Added-function-prototypes-to-head.patch \
+            file://0004-nv-pci-Updated-function-call-parameters-to-align-wit.patch \
 "
 
 S = "${WORKDIR}/git"

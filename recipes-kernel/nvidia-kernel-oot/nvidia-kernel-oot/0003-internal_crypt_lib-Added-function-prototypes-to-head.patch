@@ -1,0 +1,40 @@
+From 6687fa268fe9738bdaa3c2c2529f7723eafd534c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Juhandr=C3=A9=20Knoetze?= <juhandre.knoetze@windriver.com>
+Date: Mon, 28 Sep 2026 10:40:36 -0400
+Subject: [PATCH 3/4] internal_crypt_lib: Added function prototypes to header
+ file
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Removes warnings of "no previous prototype for" for two functions.
+
+Upstream-Status: Pending
+Signed-off-by: Juhandré Knoetze <juhandre.knoetze@windriver.com>
+---
+ nvdisplay/kernel-open/nvidia/internal_crypt_lib.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/nvdisplay/kernel-open/nvidia/internal_crypt_lib.h b/nvdisplay/kernel-open/nvidia/internal_crypt_lib.h
+index 8b46cf7..75e8807 100644
+--- a/nvdisplay/kernel-open/nvidia/internal_crypt_lib.h
++++ b/nvdisplay/kernel-open/nvidia/internal_crypt_lib.h
+@@ -117,6 +117,15 @@ int libspdm_aead(const uint8_t *key, size_t key_size,
+                  const uint8_t *tag, size_t tag_size,
+                  uint8_t *data_out, size_t *data_out_size,
+                  bool enc, char const *alg);
++int libspdm_aead_prealloc(void **context, char const *alg);
++int libspdm_aead_prealloced(void *context,
++                            const uint8_t *key, size_t key_size,
++                            const uint8_t *iv, size_t iv_size,
++                            const uint8_t *a_data, size_t a_data_size,
++                            const uint8_t *data_in, size_t data_in_size,
++                            uint8_t *tag, size_t tag_size,
++                            uint8_t *data_out, size_t *data_out_size,
++                            bool enc);
+ 
+ void *lkca_hash_new(const char* alg_name);
+ void lkca_hash_free(struct shash_desc *ctx);
+-- 
+2.43.0
+

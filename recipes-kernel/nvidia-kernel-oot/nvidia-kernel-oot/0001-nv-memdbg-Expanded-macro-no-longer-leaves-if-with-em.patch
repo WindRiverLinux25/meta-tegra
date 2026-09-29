@@ -1,0 +1,40 @@
+From 720fb1dae1134fa76703bdcf18cb7ecbf916bc09 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Juhandr=C3=A9=20Knoetze?= <juhandre.knoetze@windriver.com>
+Date: Mon, 28 Sep 2026 08:41:08 -0400
+Subject: [PATCH 1/4] nv-memdbg: Expanded macro no longer leaves if with empty
+ body
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Replaced the creation of an empty body with a no-op marco.
+
+Upstream-Status: Pending
+Signed-off-by: Juhandré Knoetze <juhandre.knoetze@windriver.com>
+---
+ nvdisplay/kernel-open/common/inc/nv-memdbg.h | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/nvdisplay/kernel-open/common/inc/nv-memdbg.h b/nvdisplay/kernel-open/common/inc/nv-memdbg.h
+index a749571..f6a2bea 100644
+--- a/nvdisplay/kernel-open/common/inc/nv-memdbg.h
++++ b/nvdisplay/kernel-open/common/inc/nv-memdbg.h
+@@ -41,8 +41,13 @@ void nv_memdbg_exit(void);
+ 
+ #else
+ 
+-#define NV_MEMDBG_ADD(ptr, size)
+-#define NV_MEMDBG_REMOVE(ptr, size)
++#define noop ((void)0)
++
++#define NV_MEMDBG_ADD(ptr, size) \
++    noop
++
++#define NV_MEMDBG_REMOVE(ptr, size) \
++    noop
+ 
+ #endif /* NV_MEM_LOGGER */
+ 
+-- 
+2.43.0
+

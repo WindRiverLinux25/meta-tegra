@@ -1,0 +1,106 @@
+From d0d72349f396b7443687cb036b037175ee9fa5ec Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Juhandr=C3=A9=20Knoetze?= <juhandre.knoetze@windriver.com>
+Date: Fri, 25 Sep 2026 08:22:03 -0400
+Subject: [PATCH] drm: tegra: Adding conftest for drm_fb_helper_alloc_fbi
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+In upstream commit ea595a1e5e753c977723d3f5c5d4cddcaa44be0e the
+function `drm_fb_helper_allow_info` was made static. To achieve the same
+functionality the `fb_info *info` pointer can be achieved from
+`helper->info`.
+
+A check has been added for `drm_fb_helper_alloc_fbi` since if that is no
+longer present either than it has to be updated to match the upstream
+commit.
+
+Upstream-Status: Pending
+Signed-off-by: Juhandré Knoetze <juhandre.knoetze@windriver.com>
+---
+ nvidia-oot/drivers/gpu/drm/tegra/fb.c   | 10 ++++++++--
+ nvidia-oot/scripts/conftest/Makefile    |  1 +
+ nvidia-oot/scripts/conftest/conftest.sh | 18 ++++++++++++++++++
+ 3 files changed, 27 insertions(+), 2 deletions(-)
+
+diff --git a/nvidia-oot/drivers/gpu/drm/tegra/fb.c b/nvidia-oot/drivers/gpu/drm/tegra/fb.c
+index a5e254a3..233ba63d 100644
+--- a/nvidia-oot/drivers/gpu/drm/tegra/fb.c
++++ b/nvidia-oot/drivers/gpu/drm/tegra/fb.c
+@@ -245,7 +245,11 @@ static int tegra_fbdev_probe(struct drm_fb_helper *helper,
+ 	unsigned int bytes_per_pixel;
+ 	struct drm_framebuffer *fb;
+ 	unsigned long offset;
++#if defined(NV_DRM_FB_HELPER_ALLOC_INFO_PRESENT) || defined(NV_DRM_FB_HELPER_ALLOC_FBI_PRESENT)
+ 	struct fb_info *info;
++#else
++    struct fb_info *info = helper->info;
++#endif
+ 	struct tegra_bo *bo;
+ 	size_t size;
+ 	int err;
+@@ -266,16 +270,18 @@ static int tegra_fbdev_probe(struct drm_fb_helper *helper,
+ 	if (IS_ERR(bo))
+ 		return PTR_ERR(bo);
+ 
+-#if defined(NV_DRM_FB_HELPER_ALLOC_INFO_PRESENT) /* Linux v6.2 */
++#if defined(NV_DRM_FB_HELPER_ALLOC_INFO_PRESENT) && !defined(NV_DRM_FB_HELPER_ALLOC_FBI_PRESENT)
+ 	info = drm_fb_helper_alloc_info(helper);
+-#else
++#elif defined(NV_DRM_FB_HELPER_ALLOC_FBI_PRESENT)
+ 	info = drm_fb_helper_alloc_fbi(helper);
+ #endif
++#if defined(NV_DRM_FB_HELPER_ALLOC_INFO_PRESENT) || defined(NV_DRM_FB_HELPER_ALLOC_FBI_PRESENT)
+ 	if (IS_ERR(info)) {
+ 		dev_err(drm->dev, "failed to allocate framebuffer info\n");
+ 		drm_gem_object_put(&bo->gem);
+ 		return PTR_ERR(info);
+ 	}
++#endif
+ 
+ 	fbdev->fb = tegra_fb_alloc(drm, &cmd, &bo, 1);
+ 	if (IS_ERR(fbdev->fb)) {
+diff --git a/nvidia-oot/scripts/conftest/Makefile b/nvidia-oot/scripts/conftest/Makefile
+index 1a0c2195..6e8ab2c7 100644
+--- a/nvidia-oot/scripts/conftest/Makefile
++++ b/nvidia-oot/scripts/conftest/Makefile
+@@ -115,6 +115,7 @@ NV_CONFTEST_FUNCTION_COMPILE_TESTS += drm_aperture_remove_framebuffers
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += drm_debugfs_remove_files_has_root_arg
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += drm_driver_struct_has_irq_enabled_arg
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += drm_fb_helper_alloc_info
++NV_CONFTEST_FUNCTION_COMPILE_TESTS += drm_fb_helper_alloc_fbi
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += drm_fb_helper_prepare_has_preferred_bpp_arg
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += drm_fb_helper_unregister_info
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += drm_fb_helper_struct_has_info_arg
+diff --git a/nvidia-oot/scripts/conftest/conftest.sh b/nvidia-oot/scripts/conftest/conftest.sh
+index 264f0da7..4f729461 100755
+--- a/nvidia-oot/scripts/conftest/conftest.sh
++++ b/nvidia-oot/scripts/conftest/conftest.sh
+@@ -6994,6 +6994,24 @@ compile_test() {
+             compile_check_conftest "$CODE" "NV_DRM_FB_HELPER_ALLOC_INFO_PRESENT" "" "functions"
+         ;;
+ 
++        drm_fb_helper_alloc_fbi)
++            #
++            # Determine if the function 'drm_fb_helper_alloc_fbi' is present
++            # Commit ea595a1e5e75 ("drm/fb-helper: Allocate and release
++            # fb_info in single place") removed the publicly accessible
++            # function 'drm_fb_helper_alloc_info` in Linux v6.12
++            #
++            CODE="
++            #undef CONFIG_ACPI
++            #include <drm/drm_fb_helper.h>
++            void conftest_drm_fb_helper_alloc_fbi(void)
++            {
++                    drm_fb_helper_alloc_fbi();
++            }"
++
++            compile_check_conftest "$CODE" "NV_DRM_FB_HELPER_ALLOC_FBI_PRESENT" "" "functions"
++        ;;
++
+         drm_fb_helper_prepare_has_preferred_bpp_arg)
+             #
+             # Determine if the function 'drm_fb_helper_prepare' has the
+-- 
+2.43.0
+

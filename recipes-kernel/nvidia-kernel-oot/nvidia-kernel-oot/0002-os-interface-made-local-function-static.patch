@@ -1,0 +1,34 @@
+From 48133af93728abd44fdc860a06b1d6905b9fe049 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Juhandr=C3=A9=20Knoetze?= <juhandre.knoetze@windriver.com>
+Date: Mon, 28 Sep 2026 10:37:33 -0400
+Subject: [PATCH 2/4] os-interface: made local function static
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This removes compiler warnings that there is no prototype. The function
+`void *os_mem_copy_custom()` is not called outside the compilation unit
+so labeling it `static` has no impact.
+
+Upstream-Status: Pending
+Signed-off-by: Juhandré Knoetze <juhandre.knoetze@windriver.com>
+---
+ nvdisplay/kernel-open/nvidia/os-interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/nvdisplay/kernel-open/nvidia/os-interface.c b/nvdisplay/kernel-open/nvidia/os-interface.c
+index c1fe200..45a6cc8 100644
+--- a/nvdisplay/kernel-open/nvidia/os-interface.c
++++ b/nvdisplay/kernel-open/nvidia/os-interface.c
+@@ -373,7 +373,7 @@ NvS32 NV_API_CALL os_string_compare(const char *str1, const char *str2)
+     return strcmp(str1, str2);
+ }
+ 
+-void *os_mem_copy_custom(
++static void *os_mem_copy_custom(
+     void       *dstPtr,
+     const void *srcPtr,
+     NvU32       length
+-- 
+2.43.0
+
